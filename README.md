@@ -1,3 +1,3 @@
 # ARMS
 Task detection based on accelerometer data
-commit
+commit - first commit
