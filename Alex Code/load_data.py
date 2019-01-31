@@ -2,10 +2,18 @@ import os
 import numpy as np
 
 
+path_to_data = "Data"
+
+# Use for loading data from the trainin/test indices files.
+def load_data_subset(indices_path):
+    examples, labels = load_data()
+    with open(indices_path, 'r') as f:
+        indices = [int(ix) for ix in f.readline().split(',')]
+    return [examples[ix] for ix in indices], [labels[ix] for ix in indices]
 
 def load_data():
-    directories = [f for f in os.listdir("Data")
-              if not os.path.isfile(os.path.join("Data", f))]
+    directories = [f for f in os.listdir(path_to_data)
+              if not os.path.isfile(os.path.join(path_to_data, f))]
 
     examples = []
     labels = []
@@ -54,27 +62,6 @@ def convert_labels(labels, label_set):
         one_hot_labels.append(one_hot)
 
     return np.stack(one_hot_labels)
-
-
-"""Directly from https://github.com/dennybritz/cnn-text-classification-tf/blob/master/data_helpers.py"""
-def batch_iter(data, batch_size, num_epochs, shuffle=True):
-    """
-    Generates a batch iterator for a dataset.
-    """
-    data = np.array(data)
-    data_size = len(data)
-    num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
-    for epoch in range(num_epochs):
-        # Shuffle the data at each epoch
-        if shuffle:
-            shuffle_indices = np.random.permutation(np.arange(data_size))
-            shuffled_data = data[shuffle_indices]
-        else:
-            shuffled_data = data
-        for batch_num in range(num_batches_per_epoch):
-            start_index = batch_num * batch_size
-            end_index = min((batch_num + 1) * batch_size, data_size)
-            yield shuffled_data[start_index:end_index]
 
 
 
