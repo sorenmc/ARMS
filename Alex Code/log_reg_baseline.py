@@ -8,13 +8,13 @@ import numpy as np
 #Whether or not to run on the test set.
 evaluate = True
 num_folds = 10
-truncate_threshold = 0.9
+truncate_threshold = 0.95
 # Inverse regularization penalty
-C = 0.9
+C = 1
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
-    if truncate_threshold > 0:
+    if truncate_threshold < 1:
         _, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=truncate_threshold)
 
     print('Training set size: {}'.format(len(examples)))

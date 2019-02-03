@@ -1,0 +1,16 @@
+Procedure:
+
+Stratified 0.8/0.2 test/training data
+Trimmed training set down to examples below a length constant such that 90%
+of examples are still included. Removed classes with only 1 or no exampls left since these can't be stratified
+(not sure if there was a better way to do this). For training, I randomly stratified 0.2 of the training examples
+out for validation/fine-tuning and ran 10-fold cross validation on the remaining training examples. 
+I selected the best performing cross validation model and got a fine-tuning score by predicitng on the validation set.
+I used the fine-tuning score to select the regularization for Logistic Regression (I started at 1
+and dropped by 0.1 until I saw a significant performance decrease), and then used the constant that
+gave the fine-tuning score to train a model and run it against the test data.
+
+I repeated the process for a 95% length threshold and this seemed to perform much better. I maybe should have tried
+smaller reg-constants for the 90% split since I ended up chosing 0.5 reg-constant for the 95% split.
+
+Not using a length threshold causes training to take a very long time. I do not have a result for this yet.
