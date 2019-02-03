@@ -5,17 +5,25 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import numpy as np
 
+#Whether or not to run on the test set.
+evaluate = True
 num_folds = 10
+truncate_threshold = 0.9
+# Inverse regularization penalty
+C = 0.9
 
-
-def train():
+def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
-    _, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=0.90)
+    if truncate_threshold > 0:
+        _, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=truncate_threshold)
+
+    print('Training set size: {}'.format(len(examples)))
+    print('Num classes: {}'.format(len(list(set(labels)))))
 
     X, _ = pad_examples(examples)
     # Have to 'flatten' array to 2D to work with logsitic regression
     X = np.reshape(X, (X.shape[0], X.shape[1] * 3))
-    y = convert_labels(labels, list(set(labels)))
+    y = np.argmax(convert_labels(labels, list(set(labels))), axis=1)
 
     '''Split of fine-tuning set'''
     sss = StratifiedShuffleSplit(1, train_size=0.8)
@@ -43,7 +51,8 @@ def train():
             multi_class='multinomial',
             solver='newton-cg',
             max_iter=200,
-            tol=1e-4
+            tol=1e-4,
+            C=C
         )
         lr.fit(X_trainfold, y_trainfold)
 
@@ -51,7 +60,7 @@ def train():
         accuracy = accuracy_score(y_true = y_valfold, y_pred=predictions)
 
         crossval_accuracies.append(accuracy)
-        crossval_accuracies.append(lr)
+        crossval_models.append(lr)
 
         print('Fold {} accuracy: {}'.format(fold, accuracy))
 
@@ -59,13 +68,36 @@ def train():
     best_model = crossval_models[best_ID]
 
     predictions = best_model.predict(X_val)
-    accuracy = accuracy(y_true=y_val, y_pred=predictions)
+    accuracy = accuracy_score(y_true=y_val, y_pred=predictions)
 
     print('Validation accuracy: {}'.format(accuracy))
 
+    if return_model:
+        return best_model
 
+if not evaluate:
+    train()
+else:
+    model = train(return_model=True)
 
-train()
+    #Get max length in training set
+    examples, labels = load_data_subset('Data/train_indices.csv')
+    if truncate_threshold > 0:
+        maxlen, _, _ = get_examples_below_length_threshold(examples, labels, threshold=truncate_threshold)
 
+    #Load test data & truncate
+    test_examples, test_labels = load_data_subset('Data/test_indices.csv')
+    test_examples, _ = pad_examples(test_examples)
+    if test_examples.shape[1] > maxlen:
+        test_examples = test_examples[:, :maxlen, :]
+
+    test_examples = np.reshape(test_examples, (test_examples.shape[0], test_examples.shape[1] * 3))
+    test_labels = np.argmax(convert_labels(test_labels, list(set(test_labels))), axis=1)
+
+    test_predictions = model.predict(test_examples)
+
+    test_accuracy = accuracy_score(y_true=test_labels, y_pred=test_predictions)
+
+    print('Test accuracy: {}'.format(test_accuracy))
 
 
