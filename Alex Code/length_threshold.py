@@ -12,21 +12,12 @@ def get_examples_below_length_threshold(examples, labels, threshold=0.9):
     examples, labels = zip(*examples_labels)
     truncated_length = ceil(len(examples) * threshold)
 
-    examples = examples[:truncated_length]
-    labels = labels[:truncated_length]
-    length_constant = len(examples[-1])
+    trunc_examples = []
+    for i in range(len(examples)):
+        if i < truncated_length:
+            trunc_examples.append(examples[i])
+            length_constant = len(examples[i])
+        else:
+            trunc_examples.append(examples[i][:length_constant])
 
-    # In order to do splits we must now remove classes that only have one example
-    trimmed_examples = []
-    trimmed_labels = []
-    for label in list(set(labels)):
-        rel_examples = [example for i, example in enumerate(examples) if labels[i] == label]
-        rel_labels = [label] * len(rel_examples)
-        if len(rel_examples) > 1:
-            trimmed_examples.extend(rel_examples)
-            trimmed_labels.extend(rel_labels)
-
-    examples = trimmed_examples
-    labels = trimmed_labels
-
-    return length_constant, examples, labels
+    return length_constant, trunc_examples, labels

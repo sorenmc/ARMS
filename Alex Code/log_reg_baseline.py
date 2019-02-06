@@ -5,12 +5,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import numpy as np
 
+from statistics import mean
+
 #Whether or not to run on the test set.
 evaluate = True
 num_folds = 10
-truncate_threshold = 0.95
+truncate_threshold = 0.9
 # Inverse regularization penalty
-C = 1
+C = 0.7
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
@@ -24,6 +26,8 @@ def train(return_model=False):
     # Have to 'flatten' array to 2D to work with logsitic regression
     X = np.reshape(X, (X.shape[0], X.shape[1] * 3))
     y = np.argmax(convert_labels(labels, list(set(labels))), axis=1)
+
+    print(X.shape)
 
     '''Split of fine-tuning set'''
     sss = StratifiedShuffleSplit(1, train_size=0.8)
@@ -70,6 +74,7 @@ def train(return_model=False):
     predictions = best_model.predict(X_val)
     accuracy = accuracy_score(y_true=y_val, y_pred=predictions)
 
+    print("Mean cross-val accuracy: {}".format(mean(crossval_accuracies)))
     print('Validation accuracy: {}'.format(accuracy))
 
     if return_model:

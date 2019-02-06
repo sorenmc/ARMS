@@ -1,0 +1,2 @@
+Same as 2/02 experiment, except after the length constant is selected (such that 90/95% of examples are
+below this length), the remaining 10% of examples are /truncated/ note excluded.
