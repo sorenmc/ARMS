@@ -44,6 +44,7 @@ class SeqCNN(object):
 
             pooled = tf.reshape(pooled, [-1, num_filters])
 
+
             with tf.name_scope("output"):
                 # Transform pooled vectors to prediction logits
                 W = tf.Variable(tf.truncated_normal([num_filters, num_classes], stddev=0.1), name="W")
