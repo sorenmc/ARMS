@@ -9,7 +9,11 @@ from sklearn.metrics.classification import accuracy_score
 
 from seq_cnn import SeqCNN
 from load_data import load_data_subset, pad_examples, convert_labels
+from length_threshold import get_examples_below_length_threshold 
+from statistics import mean
 
+# Test data
+eval_test_performance = True
 
 # Experiment parameters
 num_folds = 10
@@ -17,8 +21,8 @@ num_epochs = 200
 batch_size = 10
 
 # Model parameters
-filter_length = 10
-num_filters = 30
+filter_length = 50
+num_filters = 2000
 
 # Cross validation model tracking
 crossval_models = []
@@ -42,8 +46,11 @@ def get_batch(X, y, batch_num, batch_size):
 
 """Get Data"""
 examples, labels = load_data_subset(indices_path="Data/train_indices.csv")
+_, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=0.9)
 X, X_masks = pad_examples(examples)
 y = convert_labels(labels, list(set(labels)))
+
+print(X.shape)
 
 """Split off validation set"""
 sss = StratifiedShuffleSplit(1, train_size=0.8)
@@ -141,6 +148,8 @@ for fold in range(num_folds):
 print('\nAccuracies\n')
 for acc in crossval_accuracies:
     print(acc)
+
+print('Mean crossval accuracy: {}'.format(mean(crossval_accuracies)))
 
 best_model_ID = crossval_accuracies.index(max(crossval_accuracies))
 print('Best performing model: {}'.format(best_model_ID))
