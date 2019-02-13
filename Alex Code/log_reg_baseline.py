@@ -9,7 +9,7 @@ from statistics import mean
 
 #Whether or not to run on the test set.
 evaluate = True
-num_folds = 10
+num_folds = 1
 truncate_threshold = 0.9
 # Inverse regularization penalty
 C = 0.7
@@ -96,8 +96,12 @@ else:
     if test_examples.shape[1] > maxlen:
         test_examples = test_examples[:, :maxlen, :]
 
+    for tl in test_labels:
+        print(tl)
+
     test_examples = np.reshape(test_examples, (test_examples.shape[0], test_examples.shape[1] * 3))
-    test_labels = np.argmax(convert_labels(test_labels, list(set(test_labels))), axis=1)
+    test_labels = convert_labels(test_labels, list(set(test_labels)))
+    test_labels = np.argmax(test_labels, axis=1)
 
     test_predictions = model.predict(test_examples)
 
