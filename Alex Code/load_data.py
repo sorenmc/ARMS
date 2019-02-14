@@ -14,13 +14,14 @@ def load_data_subset(indices_path):
 def load_data():
     directories = [f for f in os.listdir(path_to_data)
               if not os.path.isfile(os.path.join(path_to_data, f))]
+    directories.sort()
 
     examples = []
     labels = []
     for label in directories:
         path = os.path.join("Data", label)
         filenames = os.listdir(path)
-
+	
         for filename in filenames:
             file = open(os.path.join(path, filename))
             file_lines = file.readlines()

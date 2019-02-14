@@ -12,6 +12,7 @@ from load_data import load_data_subset, pad_examples, convert_labels
 from length_threshold import get_examples_below_length_threshold 
 from statistics import mean
 
+
 # Test data
 eval_test_performance = True
 
@@ -19,10 +20,12 @@ eval_test_performance = True
 num_folds = 10
 num_epochs = 200
 batch_size = 10
+length_threshold = 0.95
 
 # Model parameters
 filter_length = 50
 num_filters = 2000
+dropout_keep_prob = 1
 
 # Cross validation model tracking
 crossval_models = []
@@ -46,11 +49,11 @@ def get_batch(X, y, batch_num, batch_size):
 
 """Get Data"""
 examples, labels = load_data_subset(indices_path="Data/train_indices.csv")
-_, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=0.9)
-X, X_masks = pad_examples(examples)
-y = convert_labels(labels, list(set(labels)))
+length_threshold, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=length_threshold)
 
-print(X.shape)
+X, X_masks = pad_examples(examples)
+y = convert_labels(labels, sorted(list(set(labels))))
+
 
 """Split off validation set"""
 sss = StratifiedShuffleSplit(1, train_size=0.8)
@@ -84,7 +87,8 @@ for fold in range(num_folds):
                 sequence_length=X.shape[1],
                 num_classes = y.shape[1],
                 filter_length=filter_length,
-                num_filters=num_filters
+                num_filters=num_filters,
+                dropout_keep=dropout_keep_prob
             )
 
 
@@ -181,8 +185,51 @@ with tf.Graph().as_default():
         y_val_classes = np.array([np.argmax(y_val_i) for y_val_i in y_val])
         accuracy = accuracy_score(y_true=y_val_classes, y_pred=predictions)
 
-        print("Final accuracy: {}".format(accuracy))
+print("Final accuracy: {}".format(accuracy))
+
+if not eval_test_performance:
+    exit()
 
 
+""" Evaluate best performing model on test set """
 
+print("Running test data")
 
+# Get test data
+examples_test, labels_test = load_data_subset(indices_path="Data/test_indices.csv")
+X_test, _ = pad_examples(examples_test)
+
+# Test examples have to be truncated to length calculated from training set 
+X_test = X_test[:, :X.shape[1]]
+
+print(X_test.shape)
+
+y_test = convert_labels(labels_test, sorted(list(set(labels_test))))
+
+with tf.Graph().as_default():
+    session_conf = tf.ConfigProto(
+        allow_soft_placement=True,
+    )
+    sess = tf.Session(config=session_conf)
+    with sess.as_default():
+        seq_cnn = SeqCNN(
+            sequence_length=X_test.shape[1],
+            num_classes=y_test.shape[1],
+            filter_length=filter_length,
+            num_filters=num_filters
+        )
+
+        saver = tf.train.Saver(tf.all_variables())
+        saver.restore(sess, crossval_models[best_model_ID])
+
+        feed_dict = {
+            seq_cnn.X: X_test,
+            seq_cnn.y: y_test
+        }
+
+        predictions = sess.run(seq_cnn.predictions, feed_dict=feed_dict)
+        # have to convert y_val back from one_hot into class number
+        y_test_classes = np.array([np.argmax(y_test_i) for y_test_i in y_test])
+        accuracy = accuracy_score(y_true=y_test_classes, y_pred=predictions)
+
+print("Final test data accuracy: {}".format(accuracy))
