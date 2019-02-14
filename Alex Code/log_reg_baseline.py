@@ -8,11 +8,11 @@ import numpy as np
 from statistics import mean
 
 #Whether or not to run on the test set.
-evaluate = True
+evaluate = False
 num_folds = 10
-truncate_threshold = 0.95
+truncate_threshold = 0.9
 # Inverse regularization penalty
-C = 0.7
+C = 1
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')

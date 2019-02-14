@@ -13,7 +13,7 @@ def load_data_subset(indices_path):
 
 def load_data():
     directories = [f for f in os.listdir(path_to_data)
-              if not os.path.isfile(os.path.join(path_to_data, f))]
+              if not os.path.isfile(os.path.join(path_to_data, f)) and '_MODEL' not in f]
 
     examples = []
     labels = []
