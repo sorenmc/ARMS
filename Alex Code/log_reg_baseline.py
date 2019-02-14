@@ -2,17 +2,17 @@ from load_data import load_data_subset, pad_examples, convert_labels
 from length_threshold import get_examples_below_length_threshold
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 import numpy as np
 
 from statistics import mean
 
 #Whether or not to run on the test set.
-evaluate = False
+evaluate = True
 num_folds = 10
 truncate_threshold = 0.9
 # Inverse regularization penalty
-C = 1
+C = 0.7
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
@@ -111,5 +111,4 @@ else:
     test_accuracy = accuracy_score(y_true=test_labels, y_pred=test_predictions)
 
     print('Test accuracy: {}'.format(test_accuracy))
-
 
