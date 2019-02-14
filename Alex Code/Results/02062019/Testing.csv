@@ -1,2 +1,3 @@
 ﻿Window Size,Num Filters,Test Accuracy
 50,2000,0.8367
+30,2000,0.6939
