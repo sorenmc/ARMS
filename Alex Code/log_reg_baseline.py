@@ -8,7 +8,7 @@ import numpy as np
 from statistics import mean
 
 #Whether or not to run on the test set.
-evaluate = True
+evaluate = False
 num_folds = 1
 truncate_threshold = 0.9
 # Inverse regularization penalty
