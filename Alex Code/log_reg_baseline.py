@@ -8,11 +8,11 @@ import numpy as np
 from statistics import mean
 
 #Whether or not to run on the test set.
-evaluate = True
+evaluate = False
 num_folds = 10
 truncate_threshold = 0.9
 # Inverse regularization penalty
-C = 0.7
+C = 1
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
@@ -20,12 +20,14 @@ def train(return_model=False):
         _, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=truncate_threshold)
 
     print('Training set size: {}'.format(len(examples)))
-    print('Num classes: {}'.format(len(list(set(labels)))))
+    print('Num classes: {}'.format(len(sorted(list(set(labels))))))
 
     X, _ = pad_examples(examples)
     # Have to 'flatten' array to 2D to work with logsitic regression
     X = np.reshape(X, (X.shape[0], X.shape[1] * 3))
-    y = np.argmax(convert_labels(labels, list(set(labels))), axis=1)
+    train_label_set = sorted(list(set(labels)))
+    ls = convert_labels(labels, train_label_set)
+    y = np.argmax(ls, axis=1)
 
     print(X.shape)
 
@@ -96,8 +98,13 @@ else:
     if test_examples.shape[1] > maxlen:
         test_examples = test_examples[:, :maxlen, :]
 
+
+
     test_examples = np.reshape(test_examples, (test_examples.shape[0], test_examples.shape[1] * 3))
-    test_labels = np.argmax(convert_labels(test_labels, list(set(test_labels))), axis=1)
+    test_label_set = sorted(list(set(test_labels)))
+    print(test_label_set)
+    test_labels = convert_labels(test_labels, test_label_set)
+    test_labels = np.argmax(test_labels, axis=1)
 
     test_predictions = model.predict(test_examples)
 
