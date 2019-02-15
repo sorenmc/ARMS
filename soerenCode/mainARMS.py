@@ -5,7 +5,7 @@ import json
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense,Activation, Dropout, BatchNormalization, Conv2D,Conv1D, Flatten
+from tensorflow.keras.layers import Dense,Activation, Dropout, BatchNormalization,Conv2D,Conv1D,Flatten,LSTM,MaxPool1D
 from sklearn.preprocessing import LabelEncoder,LabelBinarizer
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import TensorBoard
@@ -52,7 +52,7 @@ class dataModel:
         model.add(Conv2D(input_shape = (128,3,1,),kernel_size = (8,3), padding = "valid", strides = (2,1), filters = 3, activation = "relu"))
         model.add(BatchNormalization())
         #model.add(Dropout(0.5))
-        model.add(Conv2D(kernel_size = (11,1), strides = (2,1), padding = "valid", filters = 1, activation = "relu"))
+        model.add(Conv2D(kernel_size = (11,1), strides = (2,1), padding = "valid", filters = 1, activation = "elu"))
         model.add(BatchNormalization())
         model.add(Flatten())
         #model.add(Dropout(0.5))
@@ -62,21 +62,22 @@ class dataModel:
         print(model.summary())
     
     def buildNet1D(self):
-        NAME = "1dNetwork"
         model = Sequential()
-        model.add(Conv1D(input_shape = (128,3,),kernel_size = (8), padding = "valid", strides = (2), filters = 20, activation = "relu"))
+        model.add(Conv1D(input_shape = (128,3,),kernel_size = (8), padding = "valid", strides = (2), filters = 20, activation = "elu"))
         model.add(BatchNormalization())
-        #model.add(Dropout(0.5))
-        model.add(Conv1D(kernel_size = (11), strides = (2), padding = "valid", filters = 7, activation = "relu"))
+        model.add(MaxPool1D(pool_size=2,strides=2,padding="valid"))
+        model.add(Conv1D(kernel_size = (10), strides = (2), padding = "valid", filters = 7, activation = "elu"))
         model.add(BatchNormalization())
+        model.add(MaxPool1D(pool_size=2,strides=2,padding="valid"))
         model.add(Flatten())
-        #model.add(Dropout(0.5))
         model.add(Dense(self.nClasses, activation = "softmax" ))
-        self.tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))
         self.model = model
         print(model.summary())
     
     def trainNetwork(self,epochs,batchSize):
+        NAME = "1dNetwork"
+        #self.tensorboard = TensorBoard(log_dir='./Graph', histogram_freq=0,
+         #                 write_graph=True,write_images=True)
         self.model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
         print("training network")
         self.model.fit(self.xTrain,self.yTrain,epochs = epochs, batch_size = batchSize, 
