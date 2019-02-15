@@ -32,7 +32,7 @@ for key in jsonData.keys():
     for f in category:
         newCategory.extend(windowing(f,fs,windowSize))
     if key[-5:] == "MODEL":
-        newJson[key[:-6]].extend(newCategory)
+        print("not gonna use " + str(key))
     else:    
         newJson[key] = newCategory
 
