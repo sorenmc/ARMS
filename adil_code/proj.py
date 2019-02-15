@@ -5,9 +5,9 @@ import pandas as pd
 import os
 import glob
 
-#import tensorflow as tf
-#from keras.models import Sequential
-#from keras.layers import Dense
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -95,7 +95,6 @@ np_data = np.reshape(np_data, (one_d, (two_d*three_d)))
 
 x_train, x_test, y_train, y_test = train_test_split(np_data, np_labels, test_size=0.2, shuffle=True, stratify=np_labels)
 
-'''
 sess = tf.Session()
 
 model = Sequential()
@@ -109,7 +108,6 @@ test_loss_acc = model.evaluate(x_test, y_test)
 print(test_loss_acc)
 
 sess.close()
-'''
 
 '''
 pd_x_test = pd.DataFrame(x_test)
