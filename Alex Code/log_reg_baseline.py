@@ -10,9 +10,9 @@ from statistics import mean
 #Whether or not to run on the test set.
 evaluate = True
 num_folds = 10
-truncate_threshold = 0.95
+truncate_threshold = 0.975
 # Inverse regularization penalty
-C = 1
+C = 0.5
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
@@ -41,16 +41,17 @@ def train(return_model=False):
 
     crossval_models = []
     crossval_accuracies = []
+    crossval_training_accuracies = []
     '''Cross validation'''
     for fold in range(num_folds):
 
         '''Split off fold'''
         sss = StratifiedShuffleSplit(1, train_size=0.8)
         for trainfold_index, valfold_index in sss.split(X=X_train, y=y_train):
-            X_trainfold = X[trainfold_index]
-            y_trainfold = y[trainfold_index]
-            X_valfold = X[valfold_index]
-            y_valfold = y[valfold_index]
+            X_trainfold = X_train[trainfold_index]
+            y_trainfold = y_train[trainfold_index]
+            X_valfold = X_train[valfold_index]
+            y_valfold = y_train[valfold_index]
 
         lr = LogisticRegression(
             class_weight='balanced',
@@ -66,6 +67,7 @@ def train(return_model=False):
         accuracy = accuracy_score(y_true = y_valfold, y_pred=predictions)
 
         crossval_accuracies.append(accuracy)
+        crossval_training_accuracies.append(accuracy_score(y_true=y_trainfold, y_pred=lr.predict(X_trainfold)))
         crossval_models.append(lr)
 
         print('Fold {} accuracy: {}'.format(fold, accuracy))
@@ -75,7 +77,7 @@ def train(return_model=False):
 
     predictions = best_model.predict(X_val)
     accuracy = accuracy_score(y_true=y_val, y_pred=predictions)
-
+    print('Best model training_accuracy: {}'.format(crossval_training_accuracies[best_ID]))
     print("Mean cross-val accuracy: {}".format(mean(crossval_accuracies)))
     print('Validation accuracy: {}'.format(accuracy))
 
