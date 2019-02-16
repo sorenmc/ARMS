@@ -7,12 +7,14 @@ import glob
 
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Dropout, Conv2D, Activation, MaxPooling2D, Flatten
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 
+import Alex
 
 # enumerate adds a number like [0, [22, 35, 42], ... ] to each sample
 # creates data and then looks for row with max length, then adds 0 triplet until each row is the same length as max
@@ -96,52 +98,91 @@ def create_np_data(one_d, two_d, three_d):
     return np_data
 
 
-x_train = pd.read_csv('x_train.csv').values
-y_train = pd.read_csv('y_train.csv').values
-pd_x_val = pd.read_csv('pd_x_val.csv').values
-pd_y_val = pd.read_csv('pd_y_val.csv').values
-x_test = pd.read_csv('x_test.csv').values
-y_test = pd.read_csv('y_test.csv').values
+def create_np_csv(two_d):
+    #two_d max is 9318
+    np_data = create_np_data(850, two_d, 3)
+    np_labels = create_np_labels()
+    x_train, x_test, y_train, y_test = train_test_split(np_data, np_labels, test_size=0.2, shuffle=True, stratify=np_labels)
+    x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.2, shuffle=True, stratify=y_train)
+    np.savetxt('x_train', x_train, delimiter=',', fmt='%0.0f')
+    np.savetxt('x_test', x_test, delimiter=',', fmt='%0.0f')
+    np.savetxt('y_train', y_train, delimiter=',', fmt='%0.0f')
+    np.savetxt('y_test', y_test, delimiter=',', fmt='%0.0f')
+    np.savetxt('x_val', x_val, delimiter=',', fmt='%0.0f')
+    np.savetxt('y_val', y_val, delimiter=',', fmt='%0.0f')
 
 
-'''
-data = create_np_data(850, 2000, 3)
-labels = create_np_labels()
-x_train, x_test, y_train, y_test = stratify(data, labels)
-'''
+def create_fnn(x_train, y_train, input_dim, epochs):
+    #input_dim is 27954
+    model = Sequential()
+    model.add(Dense(units=64, activation='relu', input_dim=input_dim))
+    model.add(Dense(units=64, activation='relu'))
+    #model.add(Dropout(0.25))
+    model.add(Dense(units=14, activation='softmax'))
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.fit(x_train, y_train, epochs=epochs)
+    return model
+
+
+# need window and more knowledge on how cnn works before implementing this
+def create_cnn(size, num_cnn_layers):
+    num_filters = 32
+    kernel = (3,3)
+    max_neurons = 64
+    model = Sequential()
+    for i in range(1, num_cnn_layers+1):
+        if i == 1:
+            model.add(Conv2D(num_filters*i, kernel, input_shape=size, activation='relu', padding='same'))
+        else:
+            model.add(Conv2D(num_filters * i, kernel, activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2,2)))
+    model.add(Flatten())
+    model.add(Dense(int(max_neurons), activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(int(max_neurons/2), activation='relu'))
+    model.add(Dense(14, activation='softmax'))
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
+def cross_val(x_train, y_train):
+    model_list = []
+    accuracy = []
+    highest_accuracy = 0
+    average_accuracy = 0
+    best_model = None
+    n_folds = 10
+    print("======================================================================================")
+    for i in range(n_folds):
+        print("Training on Fold: ", i + 1)
+        x_t, x_val, y_t, y_val = train_test_split(x_train, y_train, test_size=0.1, random_state=np.random.randint(1, 1000, 1)[0])
+        model = create_fnn(x_t, y_t, 27954, 200)
+        score, accuracy_t = model.evaluate(x_val, y_val)
+        print("Val Score: " +str(score))
+        print("Val Accuracy: " +str(accuracy_t))
+        print()
+        model_list.append(model)
+        accuracy.append(accuracy_t)
+    for accuracies in accuracy:
+        if accuracies > highest_accuracy:
+            highest_accuracy = accuracies
+    for accuracies in accuracy:
+        average_accuracy += accuracies
+    average_accuracy = average_accuracy / len(accuracy)
+    best_model = model_list[accuracy.index(highest_accuracy)]
+    return best_model, highest_accuracy, average_accuracy
+
+
+x_train = pd.read_csv('x_train', header=None).values
+y_train = pd.read_csv('y_train', header=None).values
+x_val = pd.read_csv('x_val', header=None).values
+y_val = pd.read_csv('y_val', header=None).values
+x_test = pd.read_csv('x_test', header=None).values
+y_test = pd.read_csv('y_test', header=None).values
 
 sess = tf.Session()
 
-model = Sequential()
-model.add(Dense(units=64, activation='relu'))
-model.add(Dense(units=64, activation='relu'))
-model.add(Dense(units=14, activation='softmax'))
-
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-model.fit(x_train, y_train, epochs=200)
-
-#test_loss_acc = model.evaluate(x_test, y_test)
-test_loss_acc = model.evaluate(pd_x_val, pd_y_val)
-print(test_loss_acc)
+best_mod, high_acc, avg_acc = cross_val(x_train, y_train)
+print(best_mod, high_acc, avg_acc)
 
 sess.close()
-
-'''
-x_train, x_test, y_train, y_test = train_test_split(np_data, np_labels)
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train)
-
-pd_x_train = pd.DataFrame(x_train)
-pd_x_train.to_csv('x_train.csv', index=False)
-pd_x_test = pd.DataFrame(x_test)
-pd_x_test.to_csv('x_test.csv', index=False)
-
-pd_y_train = pd.DataFrame(y_train)
-pd_y_train.to_csv('y_train.csv', index=False)
-pd_y_test = pd.DataFrame(y_test)
-pd_y_test.to_csv('y_test.csv', index=False)
-
-pd_x_val = pd.DataFrame(x_val)
-pd_x_val.to_csv('pd_x_val.csv', index=False)
-pd_y_val = pd.DataFrame(y_val)
-pd_y_val.to_csv('pd_y_val.csv', index=False)
-'''
