@@ -147,7 +147,7 @@ def cross_val_fnn(x_train, y_train):
     for i in range(n_folds):
         print("Training on Fold: ", i + 1)
         x_t, x_val, y_t, y_val = train_test_split(x_train, y_train, test_size=0.1, random_state=np.random.randint(1, 1000, 1)[0])
-        model = create_fnn(x_t, y_t, 27954, 50)
+        model = create_fnn(x_t, y_t, 27954, 200)
         score, accuracy_t = model.evaluate(x_t, y_t)
         print("Val Score: " +str(score))
         print("Val Accuracy: " +str(accuracy_t))
