@@ -10,12 +10,14 @@ from statistics import mean
 #Whether or not to run on the test set.
 evaluate = True
 num_folds = 10
-truncate_threshold = 0.975
+truncate_threshold = 1
 # Inverse regularization penalty
 C = 0.5
 
 def train(return_model=False):
     examples, labels = load_data_subset('Data/train_indices.csv')
+
+    print(min([len(ex) for ex in examples]))
     if truncate_threshold < 1:
         _, examples, labels = get_examples_below_length_threshold(examples, labels, threshold=truncate_threshold)
 
