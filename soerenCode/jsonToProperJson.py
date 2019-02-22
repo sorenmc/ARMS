@@ -1,16 +1,29 @@
 import pandas as pd
 import numpy as np
 import os,json,pickle
+from scipy.signal import butter, lfilter
 
-def windowing(f,fs,windowSize):
-    f = np.array(f)
+
+
+def butter_lowpass(cutoff, fs, order=4):
+    fny = fs/2
+    normal_cutoff = cutoff / fny
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
+
+def windowing(data,fs,windowSize):
+
+    b,a = butter_lowpass(cutoff = 4 ,fs=fs)
+    
+    data = np.array(data)
+    data = lfilter(b,a,data,axis=0)
     newTrials = []
-    nSamples = len(f)
+    nSamples = len(data)
     start = 0
     end = windowSize
 
     while end < nSamples:
-        newTrials.append(f[start:end,:])
+        newTrials.append(data[start:end,:])
         start += windowSize
         end += windowSize
     

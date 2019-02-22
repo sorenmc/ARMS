@@ -1,7 +1,7 @@
-import os
+import os,sys
 import pandas as pd
 import numpy as np
-import json
+import json,time
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Dense,Activation, Dropout, BatchNormalizatio
 from sklearn.preprocessing import LabelEncoder,LabelBinarizer
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import TensorBoard
+
 class dataModel:
     def __init__(self,dataName):
         self.xTrain = 0
@@ -60,30 +61,57 @@ class dataModel:
         model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
         self.model = model
         print(model.summary())
+
     
-    def buildNet1D(self):
-        model = Sequential()
-        model.add(Conv1D(input_shape = (128,3,),kernel_size = (8), padding = "valid", strides = (2), filters = 20, activation = "elu"))
-        model.add(BatchNormalization())
-        model.add(MaxPool1D(pool_size=2,strides=2,padding="valid"))
-        model.add(Conv1D(kernel_size = (10), strides = (2), padding = "valid", filters = 7, activation = "elu"))
-        model.add(BatchNormalization())
-        model.add(MaxPool1D(pool_size=2,strides=2,padding="valid"))
-        model.add(Flatten())
-        model.add(Dense(self.nClasses, activation = "softmax" ))
-        self.model = model
-        print(model.summary())
+    def buildNets1D(self):
+
+        models = []
+
+        denseLayers = [0,1,2]
+        CNNLayers = [1,2,3,4,5]
+        filters = [2,4,8,16,32,64]
+        for dense in denseLayers:
+            for CNNLayer in CNNLayers:
+                for filt in filters:
+                    nameOfModel = "{}-conv-{}-filter-{}-dense-{}".format(CNNLayer,filt,dense,int(time.time()))
+                    model = Sequential()
+                    model.add(Conv1D(input_shape = (128,3,),kernel_size = (3), padding = "valid", filters = filt))
+                    model.add(Activation("elu"))
+                    model.add(BatchNormalization())
+                    model.add(MaxPool1D(pool_size=2,padding="valid"))
+                    
+                    for _ in range(CNNLayer):
+                        model.add(Conv1D(kernel_size = (2), padding = "valid", filters = filt))
+                        model.add(Activation("elu"))
+                        model.add(BatchNormalization())
+                        model.add(MaxPool1D(pool_size=2,padding="valid"))
+        
+                    model.add(Flatten())
+
+                    for _ in range(dense):
+                        model.add(Dense(filt))
+                        model.add(Activation("elu"))
+                    
+                    model.add(Dense(self.nClasses, activation = "softmax" ))
+                    model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+
+                    keyVals = {"model":model,
+                                "name":nameOfModel}
+                    models.append(keyVals)
+        
+        self.models = models
     
     def trainNetwork(self,epochs,batchSize):
-        NAME = "1dNetwork"
-        #self.tensorboard = TensorBoard(log_dir='./Graph', histogram_freq=0,
-         #                 write_graph=True,write_images=True)
-        self.model.compile(loss='categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
         print("training network")
         self.model.fit(self.xTrain,self.yTrain,epochs = epochs, batch_size = batchSize, 
         verbose = 1, validation_data = (self.xEval,self.yEval))
     
     def validateNetwork(self):
+        accuracy = self.model.evaluate(self.xEval,self.yEval)
+        print("The accurcy on the Eval Data was: " + str(accuracy))
+
+    
+    def testNetwork(self):
         accuracy = self.model.evaluate(self.xTest,self.yTest)
         print("The accurcy on the test Data was: " + str(accuracy))
 
@@ -91,9 +119,24 @@ class dataModel:
     
 dataModel1 = dataModel("labeledAccelerometer.json")
 #dataModel1.buildNet2D()
-dataModel1.buildNet1D()
-dataModel1.trainNetwork(epochs=100,batchSize =128)
-dataModel1.validateNetwork()
+dataModel1.buildNets1D()
+
+wFile = open("results.text","w")
+
+for keyVals in dataModel1.models:
+    dataModel1.model = keyVals["model"]
+    name = keyVals["name"]
+    
+    wFile.write("\n")
+    wFile.write(name)
+
+    dataModel1.trainNetwork(epochs=100,batchSize =128)
+    sys.stdout = wFile
+    
+    dataModel1.validateNetwork()
+    sys.stdout = sys.__stdout__
+
+wFile.close()
 
 
 
@@ -103,9 +146,6 @@ dataModel1.validateNetwork()
 
 
                 
-
-
-
 
 
 
