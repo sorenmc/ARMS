@@ -7,7 +7,7 @@ import numpy as np
 class SeqCNN(object):
     def __init__(
         self, sequence_length, num_classes,
-        filter_length, num_filters
+        filter_length, num_filters, dropout_keep=1.0
     ):
 
         self.X = tf.placeholder(tf.float32, [None, sequence_length, 3])
@@ -42,8 +42,8 @@ class SeqCNN(object):
                 name="pool"
             )
 
-            pooled = tf.reshape(pooled, [-1, num_filters])
-
+            pooled = tf.reshape(pooled, [-1, num_filters])        
+            pooled = tf.nn.dropout(pooled, keep_prob=dropout_keep, name="final_dropout")
 
             with tf.name_scope("output"):
                 # Transform pooled vectors to prediction logits

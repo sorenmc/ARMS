@@ -18,18 +18,19 @@ eval_test_performance = True
 
 # Experiment parameters
 num_folds = 10
-num_epochs = 200
+num_epochs = 500
 batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = 50
-num_filters = 2000
-dropout_keep_prob = 1
+filter_length = 20
+num_filters = 1000
+dropout_keep_prob = 0.6
 
 # Cross validation model tracking
 crossval_models = []
 crossval_accuracies = []
+crossval_training_accuracies = []
 
 """Helper functions for getting epochs & batches"""
 def shuffle_for_epoch(X, y):
@@ -53,6 +54,7 @@ length_threshold, examples, labels = get_examples_below_length_threshold(example
 
 X, X_masks = pad_examples(examples)
 y = convert_labels(labels, sorted(list(set(labels))))
+
 
 
 """Split off validation set"""
@@ -113,7 +115,7 @@ for fold in range(num_folds):
             num_batches = math.floor(X_trainfold.shape[0] / batch_size)
             for epoch in range(num_epochs):
                 # at every epoch, shuffle the data
-                X_shuff, y_shuff = shuffle_for_epoch(X, y)
+                X_shuff, y_shuff = shuffle_for_epoch(X_trainfold, y_trainfold)
                 for b in range(num_batches):
                     x_batch, y_batch = get_batch(X_shuff, y_shuff, batch_num=b, batch_size=batch_size)
 
@@ -127,7 +129,7 @@ for fold in range(num_folds):
                         feed_dict=feed_dict
                     )
 
-                    print("step: {}, loss {:g}".format(step, loss))
+                    print("fold: {} step: {}, loss {:g}".format(fold, step, loss))
 
             """ Evaluate on cross-validation fold """
             feed_dict = {
@@ -140,12 +142,24 @@ for fold in range(num_folds):
             y_val_classes = np.array([np.argmax(y_val_i) for y_val_i in y_valfold])
             accuracy = accuracy_score(y_true=y_val_classes, y_pred=predictions)
 
+            """ Get training accuracy for diagnostic purposes"""
+            training_feed_dict = {
+	        seq_cnn.X: X_trainfold,
+	        seq_cnn.y: y_trainfold
+            }
+            training_predictions = sess.run(seq_cnn.predictions, feed_dict=training_feed_dict)
+            y_train_classes = np.array([np.argmax(y_train_i) for y_train_i in y_trainfold])
+            training_accuracy = accuracy_score(y_true=y_train_classes, y_pred=training_predictions)
+
+			
+
             # Save model 'checkpoint' (all weights) in a temp directory
             model_path = saver.save(sess, checkpoint_prefix)
             crossval_models.append(model_path)
 
             # Record accuracy on current fold for model comparison
             crossval_accuracies.append(accuracy)
+            crossval_training_accuracies.append(training_accuracy)
             print("Accuracy for fold {}: {}".format(fold, accuracy))
 
 
@@ -157,6 +171,7 @@ print('Mean crossval accuracy: {}'.format(mean(crossval_accuracies)))
 
 best_model_ID = crossval_accuracies.index(max(crossval_accuracies))
 print('Best performing model: {}'.format(best_model_ID))
+print('With training accuracy: {}\n'.format(crossval_training_accuracies[best_model_ID]))
 
 """ Evaluate best performing model on validation set """
 with tf.Graph().as_default():
