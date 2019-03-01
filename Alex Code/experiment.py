@@ -1,3 +1,4 @@
+
 """Adapted from http://www.wildml.com/2015/12/implementing-a-cnn-for-text-classification-in-tensorflow/"""
 import math
 import os
@@ -8,6 +9,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics.classification import accuracy_score
 
 from seq_cnn import SeqCNN
+from seq_combine_cnn import SeqCombineCNN
 from load_data import load_data_subset, pad_examples, convert_labels
 from length_threshold import get_examples_below_length_threshold 
 from statistics import mean
@@ -23,9 +25,9 @@ batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = 20
-num_filters = 1000
-dropout_keep_prob = 0.6
+filter_length = 50
+num_filters = 1500
+dropout_keep_prob = 0.7
 
 # Cross validation model tracking
 crossval_models = []
@@ -85,13 +87,23 @@ for fold in range(num_folds):
         sess = tf.Session(config=session_conf)
         with sess.as_default():
 
-            seq_cnn = SeqCNN(
-                sequence_length=X.shape[1],
-                num_classes = y.shape[1],
-                filter_length=filter_length,
-                num_filters=num_filters,
-                dropout_keep=dropout_keep_prob
-            )
+
+            if (isinstance(filter_length, list)):
+                seq_cnn = SeqCombineCNN(
+                    sequence_length=X.shape[1],
+                    num_classes = y.shape[1],
+                    filter_lengths=filter_length,
+                    num_filters=num_filters,
+                    dropout_keep=dropout_keep_prob
+                )
+            else:
+                seq_cnn = SeqCNN(
+                    sequence_length=X.shape[1],
+                    num_classes = y.shape[1],
+                    filter_length=filter_length,
+                    num_filters=num_filters,
+                    dropout_keep=dropout_keep_prob
+                )
 
 
             """ Configure optimizer """
@@ -180,12 +192,20 @@ with tf.Graph().as_default():
     )
     sess = tf.Session(config=session_conf)
     with sess.as_default():
-        seq_cnn = SeqCNN(
-            sequence_length=X.shape[1],
-            num_classes=y.shape[1],
-            filter_length=filter_length,
-            num_filters=num_filters
-        )
+        if (isinstance(filter_length, list)):
+            seq_cnn = SeqCombineCNN(
+                sequence_length=X.shape[1],
+                num_classes=y.shape[1],
+                filter_lengths=filter_length,
+                num_filters=num_filters
+            )
+        else:
+            seq_cnn = SeqCNN(
+                sequence_length=X.shape[1],
+                num_classes=y.shape[1],
+                filter_length=filter_length,
+                num_filters=num_filters
+            )
 
         saver = tf.train.Saver(tf.all_variables())
         saver.restore(sess, crossval_models[best_model_ID])
@@ -227,12 +247,21 @@ with tf.Graph().as_default():
     )
     sess = tf.Session(config=session_conf)
     with sess.as_default():
-        seq_cnn = SeqCNN(
-            sequence_length=X_test.shape[1],
-            num_classes=y_test.shape[1],
-            filter_length=filter_length,
-            num_filters=num_filters
-        )
+        if isinstance(filter_length, list):
+            seq_cnn = SeqCombineCNN(
+                sequence_length=X_test.shape[1],
+                num_classes=y_test.shape[1],
+                filter_lengths=filter_length,
+                num_filters=num_filters
+            )
+        else:
+            seq_cnn = SeqCNN(
+                sequence_length=X_test.shape[1],
+                num_classes=y_test.shape[1],
+                filter_length=filter_length,
+                num_filters=num_filters
+            )
+        
 
         saver = tf.train.Saver(tf.all_variables())
         saver.restore(sess, crossval_models[best_model_ID])
