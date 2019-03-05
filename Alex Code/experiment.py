@@ -19,13 +19,13 @@ from statistics import mean
 eval_test_performance = True
 
 # Experiment parameters
-num_folds = 10
-num_epochs = 500
+num_folds = 3
+num_epochs = 1000
 batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = 50
+filter_length = [30, 50]
 num_filters = 1500
 dropout_keep_prob = 0.7
 

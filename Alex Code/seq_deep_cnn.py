@@ -55,7 +55,7 @@ class SeqDeepCNN(object):
             pooled_sequence_length = floor((sequence_length - filter_lengths[0] + 1) / pool_window)
 
             pooled = tf.reshape(pooled, [-1, pooled_sequence_length, num_filters[0], 1])
-            pooled = tf.nn.dropout(pooled, keep_prob=dropout_keep, name="intermediate_dropout")
+#            pooled = tf.nn.dropout(pooled, keep_prob=dropout_keep, name="intermediate_dropout")
 
 
             # Second convolution/pool
