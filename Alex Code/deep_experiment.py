@@ -15,6 +15,7 @@ from statistics import mean
 # Test data
 eval_test_performance = True
 
+
 # Experiment parameters
 num_folds = 3
 num_epochs = 1000
@@ -214,7 +215,9 @@ X_test = X_test[:, :X.shape[1]]
 
 print(X_test.shape)
 
-y_test = convert_labels(labels_test, sorted(list(set(labels_test))))
+labelset_test = sorted(list(set(labels_test)))
+
+y_test = convert_labels(labels_test, labelset_test)
 
 with tf.Graph().as_default():
     session_conf = tf.ConfigProto(
@@ -243,5 +246,26 @@ with tf.Graph().as_default():
         # have to convert y_val back from one_hot into class number
         y_test_classes = np.array([np.argmax(y_test_i) for y_test_i in y_test])
         accuracy = accuracy_score(y_true=y_test_classes, y_pred=predictions)
+        print("Final test data accuracy: {}".format(accuracy))
 
-print("Final test data accuracy: {}".format(accuracy))
+        print('\nPer class accuracies')
+        for test_class, test_label_display in enumerate(labelset_test):
+            class_indices = [i for i in range(y_test.shape[0]) if np.argmax(y_test[i]) == test_class]
+
+            X_class_test = X_test[class_indices]
+            y_class_test = y_test[class_indices]
+
+            feed_dict = {
+                seq_cnn.X: X_class_test,
+                seq_cnn.y: y_class_test
+            }
+
+            class_predictions = sess.run(seq_cnn.predictions, feed_dict=feed_dict)
+            class_y_categorical = np.array([np.argmax(y_test_i) for y_test_i in y_class_test])
+            class_accuracy = accuracy_score(y_true=class_y_categorical, y_pred=class_predictions)
+
+            print("Class: {}, Ex: {},  Accuracy: {}".format(test_label_display, len(X_class_test), class_accuracy))
+
+
+
+
