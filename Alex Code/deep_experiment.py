@@ -24,7 +24,7 @@ length_threshold = 0.95
 
 # Model parameters
 filter_length = [5, 30]
-num_filters = [50, 1000]
+num_filters = [15, 1000]
 pool_window = 5
 
 dropout_keep_prob = 0.7
