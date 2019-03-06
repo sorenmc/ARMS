@@ -25,7 +25,7 @@ batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = [30, 50]
+filter_length = 70
 num_filters = 1500
 dropout_keep_prob = 0.7
 
@@ -275,5 +275,25 @@ with tf.Graph().as_default():
         # have to convert y_val back from one_hot into class number
         y_test_classes = np.array([np.argmax(y_test_i) for y_test_i in y_test])
         accuracy = accuracy_score(y_true=y_test_classes, y_pred=predictions)
+
+
+        print('\nPer class accuracies')
+        for test_class, test_label_display in enumerate(labelset_test):
+            class_indices = [i for i in range(y_test.shape[0]) if np.argmax(y_test[i]) == test_class]
+
+            X_class_test = X_test[class_indices]
+            y_class_test = y_test[class_indices]
+
+            feed_dict = {
+                seq_cnn.X: X_class_test,
+                seq_cnn.y: y_class_test
+            }
+
+            class_predictions = sess.run(seq_cnn.predictions, feed_dict=feed_dict)
+            class_y_categorical = np.array([np.argmax(y_test_i) for y_test_i in y_class_test])
+            class_accuracy = accuracy_score(y_true=class_y_categorical, y_pred=class_predictions)
+
+            print("Class: {}, Ex: {},  Accuracy: {}".format(test_label_display, len(X_class_test), class_accuracy))
+
 
 print("Final test data accuracy: {}".format(accuracy))
