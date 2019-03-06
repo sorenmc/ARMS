@@ -18,13 +18,13 @@ eval_test_performance = True
 
 # Experiment parameters
 num_folds = 3
-num_epochs = 1000
+num_epochs = 800
 batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
 filter_length = [5, 30]
-num_filters = [15, 1000]
+num_filters = [15, 2000]
 pool_window = 5
 
 dropout_keep_prob = 0.7
