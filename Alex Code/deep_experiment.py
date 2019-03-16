@@ -22,8 +22,8 @@ batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = [10, 30]
-num_filters = [25, 1000]
+filter_length = [30, 30]
+num_filters = [60, 1000]
 pool_window = 10
 
 dropout_keep_prob = 0.7
