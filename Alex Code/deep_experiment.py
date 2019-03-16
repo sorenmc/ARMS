@@ -15,17 +15,16 @@ from statistics import mean
 # Test data
 eval_test_performance = True
 
-
 # Experiment parameters
 num_folds = 3
-num_epochs = 1000
+num_epochs = 800
 batch_size = 10
 length_threshold = 0.95
 
 # Model parameters
-filter_length = [5, 30]
-num_filters = [15, 1000]
-pool_window = 5
+filter_length = [10, 30]
+num_filters = [25, 1000]
+pool_window = 10
 
 dropout_keep_prob = 0.7
 
@@ -35,7 +34,6 @@ crossval_accuracies = []
 crossval_training_accuracies = []
 
 """Helper functions for getting epochs & batches"""
-
 
 def shuffle_for_epoch(X, y):
     size = X.shape[0]
