@@ -1,0 +1,9 @@
+,name,train,eval
+0,1-conv-16-filter-1-dense-1551974201,0.9721264469310855,0.665635436472863
+1,1-conv-32-filter-1-dense-1551974204,,
+2,2-conv-16-filter-1-dense-1551974208,,
+3,2-conv-32-filter-1-dense-1551974211,,
+4,1-conv-16-filter-2-dense-1551974215,,
+5,1-conv-32-filter-2-dense-1551974218,,
+6,2-conv-16-filter-2-dense-1551974222,,
+7,2-conv-32-filter-2-dense-1551974226,,
