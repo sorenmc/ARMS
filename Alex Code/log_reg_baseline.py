@@ -10,7 +10,7 @@ from statistics import mean
 #Whether or not to run on the test set.
 evaluate = True
 num_folds = 10
-truncate_threshold = 1
+truncate_threshold = 0.975
 # Inverse regularization penalty
 C = 0.5
 

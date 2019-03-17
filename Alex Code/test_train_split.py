@@ -8,7 +8,7 @@ Forms a two way split into just training & test
 """
 def train_test_split():
     # percent of data to use for training & and validation
-    train_split = 0.8
+    train_split = 0.6
     indices_directory = "Data"
 
     data = load_data()

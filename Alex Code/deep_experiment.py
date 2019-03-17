@@ -246,6 +246,8 @@ with tf.Graph().as_default():
         accuracy = accuracy_score(y_true=y_test_classes, y_pred=predictions)
         print("Final test data accuracy: {}".format(accuracy))
 
+
+
         print('\nPer class accuracies')
         for test_class, test_label_display in enumerate(labelset_test):
             class_indices = [i for i in range(y_test.shape[0]) if np.argmax(y_test[i]) == test_class]
@@ -263,7 +265,3 @@ with tf.Graph().as_default():
             class_accuracy = accuracy_score(y_true=class_y_categorical, y_pred=class_predictions)
 
             print("Class: {}, Ex: {},  Accuracy: {}".format(test_label_display, len(X_class_test), class_accuracy))
-
-
-
-
